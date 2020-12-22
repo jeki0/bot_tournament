@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<canvas id="canvas" width="1000" height="800"></canvas>
+
+<script>
+    let canvas = document.getElementById('canvas');
+    let ctx = canvas.getContext('2d');
+
+    let data = false;
+
+    let socket = new WebSocket("ws://192.168.0.101:8080");
+    console.log('Connecting...');
+
+    socket.onopen = function(e) {
+        console.log('Connected');
+        sendFirstData();
+        init();
+    };
+
+    socket.onmessage = function(event) {
+        data = JSON.parse(event.data);
+    };
+
+    function sendFirstData() {
+        socket.send('{"type":"site"}');
+        console.log('Sent first data');
+    }
+
+    function init() {
+        setInterval(draw, 1000/60);
+    }
+
+    function draw() {
+        if (!data) {
+            return;
+        }
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        drawPoint();
+        drawBots();
+    }
+
+    function drawPoint() {
+        ctx.fillStyle = "white";
+        ctx.fillRect(data.point.x - 5, data.point.y - 5, 10, 10);
+    }
+
+    function drawBots() {
+        ctx.fillStyle = "white";
+        for (let i =0; i < data.users.length; i++) {
+            ctx.fillRect(data.users[i].x, data.users[i].y, 10, 30);
+        }
+    }
+
+</script>
+
+</body>
+</html>
