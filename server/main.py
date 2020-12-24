@@ -7,15 +7,11 @@ import websockets
 import json
 import threading
 import time
+import random
 
 USERS = set()
 game_data = {
-    'point': {
-        'x': 100,
-        'y': 50,
-        'mx': -0.1,
-        'my': 0.1,
-    },
+    'points': [],
     'users': [
         {
             'x': 0,
@@ -34,17 +30,27 @@ bots = 0
 point_speed = 30
 
 
+def add_points():
+    for i in range(10):
+        game_data['points'].append({
+            'x': random.randint(100, 900),
+            'y': random.randint(100, 700),
+            'mx': -0.1,
+            'my': 0.1,
+        })
+
+
+add_points()
+
+
 async def add_user(websocket, first_data):
     """ Добавление нового пользователя в массив """
     USERS.add(websocket)
-    # if first_data['type'] == 'bot':
-    #     match[websocket] = 0
-    #     print('bot')
-    # if first_data['type'] == 'bot':
-    #     match[websocket] = 1
-    #     print('bot')
+    print('New connect:')
     if first_data['type'] == 'site':
-        print('site')
+        print('Site')
+    else:
+        print('Bot')
 
 
 async def remove_user(websocket):
@@ -62,9 +68,11 @@ def timer():
     while True:
         update_point()
         if USERS:
-            for user in USERS:
+            users_temp = USERS
+            for user in users_temp:
                 asyncio.run(user.send(get_data_json()))
-        time.sleep(0.02)
+                print(game_data['points'][0]['x'])
+        time.sleep(0.1)
 
 
 def get_first_data(first_data):
@@ -72,28 +80,33 @@ def get_first_data(first_data):
 
 
 def update_point():
-    if game_data['point']['my'] < 0:
-        if game_data['point']['y'] < 0:
-            game_data['point']['my'] = game_data['point']['my'] * -1
-    if game_data['point']['my'] > 0:
-        if game_data['point']['y'] > 790:
-            game_data['point']['my'] = game_data['point']['my'] * -1
+    """ Обновление позции точек и палок """
+    for point in game_data['points']:
+        if point['my'] < 0:
+            if point['y'] < 0:
+                point['my'] = point['my'] * -1
+        if point['my'] > 0:
+            if point['y'] > 790:
+                point['my'] = point['my'] * -1
 
-    p_y = game_data['point']['y'] + (point_speed* game_data['point']['my'])
-    p_x = game_data['point']['x'] + (point_speed * game_data['point']['mx'])
+        p_y = point['y'] + (point_speed * point['my'])
+        p_x = point['x'] + (point_speed * point['mx'])
 
-    for user in game_data['users']:
-        if p_y > user['y'] and p_y < (user['y'] + 30):
-            if p_x > user['x'] and p_x < (user['x'] + 10):
-                game_data['point']['mx'] = game_data['point']['mx'] * -1
+        for user in game_data['users']:
+            if p_y > user['y'] and p_y < (user['y'] + 30):
+                if p_x > user['x'] and p_x < (user['x'] + 10):
+                    point['mx'] = point['mx'] * -1
 
-    game_data['point']['y'] = game_data['point']['y'] + (point_speed * game_data['point']['my'])
-    game_data['point']['x'] = game_data['point']['x'] + (point_speed * game_data['point']['mx'])
+        point['y'] = point['y'] + (point_speed * point['my'])
+        point['x'] = point['x'] + (point_speed * point['mx'])
 
-    if game_data['point']['x'] < -10:
-        game_data['point']['x'] = 500
-    if game_data['point']['x'] > 1010:
-        game_data['point']['x'] = 400
+        if point['x'] < -10:
+            point['y'] = random.randint(50, 700)
+            point['x'] = 500
+        if point['x'] > 1010:
+            point['x'] = 500
+            point['x'] = 500
+            point['y'] = random.randint(50, 700)
 
     for user in game_data['users']:
         if user['v'] == 'up':
@@ -105,6 +118,7 @@ def update_point():
 
 
 def update_user(data, websocket):
+    """ Смена вектора бота """
     game_data['users'][data['from']]['v'] = data['command']
 
 
@@ -122,7 +136,7 @@ async def connect(websocket, path):
     finally:
         await remove_user(websocket)
 
-start_server = websockets.serve(connect, "localhost", 8080)
+start_server = websockets.serve(connect, "localhost", 3000)
 
 x = threading.Thread(target=timer, args=())
 x.start()

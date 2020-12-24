@@ -14,7 +14,7 @@
 
     let data = false;
 
-    let socket = new WebSocket("ws://192.168.0.101:8080");
+    let socket = new WebSocket("ws://localhost:3000");
     console.log('Connecting...');
 
     socket.onopen = function(e) {
@@ -24,6 +24,7 @@
     };
 
     socket.onmessage = function(event) {
+        console.log(event);
         data = JSON.parse(event.data);
     };
 
@@ -49,8 +50,11 @@
     }
 
     function drawPoint() {
-        ctx.fillStyle = "white";
-        ctx.fillRect(data.point.x - 5, data.point.y - 5, 10, 10);
+        for (let iPoint in data.points) {
+            let point = data.points[iPoint];
+            ctx.fillStyle = "white";
+            ctx.fillRect(point.x - 5, point.y - 5, 10, 10);
+        }
     }
 
     function drawBots() {
