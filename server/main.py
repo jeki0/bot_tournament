@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# WS server example
+# Bot tournament server
 
 import asyncio
 import websockets
