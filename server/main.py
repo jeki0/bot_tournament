@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Bot tournament server
+# Bot tournament server -
 
 import asyncio
 import websockets
